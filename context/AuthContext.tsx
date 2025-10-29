@@ -11,6 +11,7 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
   loading: boolean
+  supabaseInitialized: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -19,25 +20,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [supabaseInitialized, setSupabaseInitialized] = useState(false)
 
   useEffect(() => {
+    // Check if Supabase is initialized
+    if (!supabase) {
+      console.error('Supabase is not properly configured. Please check your environment variables.')
+      setLoading(false)
+      return
+    }
+    
+    setSupabaseInitialized(true)
+    
     // Check active session
     const getSession = async () => {
-      // Handle case when Supabase is not initialized
-      if (!supabase) {
-        setLoading(false)
-        return
-      }
-      
-      const { data: { session } } = await supabase.auth.getSession()
-      setSession(session)
-      setUser(session?.user || null)
-      setLoading(false)
-      
-      // Listen for auth changes
-      const { data: { subscription } } = await supabase.auth.onAuthStateChange((_event, session) => {
+      try {
+        const { data: { session } } = await supabase!.auth.getSession()
         setSession(session)
         setUser(session?.user || null)
+      } catch (error) {
+        console.error('Error getting session:', error)
+      } finally {
+        setLoading(false)
+      }
+      
+      // Listen for auth changes
+      const { data: { subscription } } = await supabase!.auth.onAuthStateChange((_event, session) => {
+        setSession(session)
+        setUser(session?.user || null)
+        setLoading(false)
       })
       
       return subscription.unsubscribe
@@ -70,7 +81,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signUp,
     signOut,
-    loading
+    loading,
+    supabaseInitialized
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

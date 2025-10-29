@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../utils/supabaseClient';
 
 export default function CloudProfileApp() {
-  const { user, signIn, signUp, signOut, loading: authLoading } = useAuth();
+  const { user, signIn, signUp, signOut, loading: authLoading, supabaseInitialized } = useAuth();
   const [view, setView] = useState<'login' | 'signup' | 'profile'>('login');
   const [loading, setLoading] = useState(false);
   
@@ -186,16 +186,8 @@ export default function CloudProfileApp() {
     }
   }
 
-  if (authLoading && !user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
-      </div>
-    );
-  }
-
   // Handle case when Supabase is not initialized
-  if (!supabase) {
+  if (!supabaseInitialized) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
@@ -206,6 +198,14 @@ export default function CloudProfileApp() {
             </p>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (authLoading && !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
       </div>
     );
   }
