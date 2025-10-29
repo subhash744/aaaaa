@@ -30,6 +30,12 @@ export default function CloudProfileApp() {
   }, [user]);
 
   async function loadProfile(userId: string) {
+    // Handle case when Supabase is not initialized
+    if (!supabase) {
+      console.log('Supabase not initialized');
+      return;
+    }
+    
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -86,6 +92,12 @@ export default function CloudProfileApp() {
     e.preventDefault();
     if (!description.trim()) {
       setError('Please enter a description');
+      return;
+    }
+
+    // Handle case when Supabase is not initialized
+    if (!supabase) {
+      setError('Supabase not initialized');
       return;
     }
 
@@ -178,6 +190,22 @@ export default function CloudProfileApp() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
         <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  // Handle case when Supabase is not initialized
+  if (!supabase) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">Configuration Error</h1>
+            <p className="text-gray-600 mb-6">
+              Supabase is not properly configured. Please check your environment variables.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
